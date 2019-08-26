@@ -12,7 +12,7 @@
     if(mysqli_num_rows($result) > 0){
         $_SESSION['userName'] = $user;
         $_SESSION['password'] = $password;
-        header('location:crud.php');
+        header('location:crud.html');
     }else{
         unset ($_SESSION['userName']);
         unset ($_SESSION['password']);
