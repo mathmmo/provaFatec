@@ -26,6 +26,14 @@
     <div class="row">
       <div class="col-md-6 offset-md-3">
         <div class="container" ng-init="fetchData()">
+          <div class="alert alert-success alert-dismissible" ng-show="success" >
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">
+              {{successMessage}}
+            </a>
+          </div>
+          <div align="right">
+            <button type="button" name="addButton" ng-click="addData()" class="btn btn-success">Adicionar</button>
+          </div>
           <div class="table-responsive" style="overflow-x: unset;">
             <table datatable="ng" dt-options="vm.dtOptions" class="table table-bordered table-striped">
               <thead>
@@ -47,14 +55,95 @@
     </div>
   </body>
 </html>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="crudmodal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form method="post" ng-submit="submitForm()">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">{{modalTitle}}</h4>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger alert-dismissible" ng-show="error" >
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">
+              {{errorMessage}}
+            </a>
+          </div>
+          <div class="form-group">
+            <label for="firstName">Insira o primeiro nome</label>
+            <input type="text" name="firstName" ng-model="firstName" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Insira o ultimo nome</label>
+            <input type="text" name="lastName" ng-model="lastName" class="form-control" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="hidden" name="hiddenId" value="{{hiddenId}}" />
+          <input type="submit" name="submitButton" id="submitButton" class="btn btn-info" value="{{submitButton}}" />
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
 <script>
   var app = angular.module('crudApp', ['datatables']);
   app.controller('crudController', function($scope, $http){
+
+    $scope.success = false;
+    $scope.error = false;
+
     $scope.fetchData = function(){
       $http.get('fetch_data.php').success(function(data){
         $scope.namesData = data;
       });
-    };
+    }
+
+    $scope.openModal = function(){
+      var modalPopup = angular.element('#crudmodal');
+      modalPopup.modal('show');
+    }
+
+    $scope.closeModal = function(){
+      var modalPopup = angular.element('#crudmodal');
+      modalPopup.modal('hide');
+    }
+
+    $scope.addData = function(){
+      $scope.modalTitle = 'Add';
+      $scope.submitButton = 'Inserir';
+      $scope.openModal();
+    }
+
+    $scope.submitForm = function(){
+      $http({
+        method:"POST",
+        url:"insert.php",
+        data:{
+          'firstName' : $scope.firstName,
+          'lastName'  : $scope.lastName,
+          'action'    : $scope.submitButton,
+          'id'        : $scope.hiddenId
+        }
+      }).success(function(data){
+        if(data.error != ''){
+          $scope.success = false;
+          $scope.error = true;
+          $scope.errorMessage = data.error;
+        }else{
+          $scope.success = true;
+          $scope.error = false;
+          $scope.successMassage = data.message;
+          $scope.formData = {};
+          $scope.closeModal();
+          $scope.fetchData();
+        }
+      });
+    }
   });
 
 </script>
