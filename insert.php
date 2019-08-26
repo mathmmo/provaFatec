@@ -4,44 +4,72 @@
 
     $formData = json_decode(file_get_contents("php://input"));
     
-    $error = '';
+    $error = [];
     $message = '';
     $validationError = '';
     $firstName = '';
     $lastName = '';
 
-    if(empty($formData->firstName)){
-        $error[] = 'Necessário informar primeiro nome';
-    }else{
-        $firstName = $formData->firstName;
-    }
-    if(empty($formData->lastName)){
-        $error[] = 'Necessário informar ultimo nome';
-    }else{
-        $lastName = $formData->lastName;
-    }
-
-    if(empty($error)){
-        if($formData->action == 'Inserir'){
-            $data = array(
-                ':firstName'     => $firstName,
-                ':lastName'      => $lastName
-            );
-            $query = "INSERT INTO names (firstName, lastName) VALUES (:firstName, :lastName)";
-            $statement = $connect->prepare($query);
-            if($statement->execute($data)){
-                $message = 'Registro inserido';
-            }
+    if($formData->action == 'fetchSingleData'){
+        $query = "SELECT * FROM names WHERE id = '" . $formData->id . "'";
+        $statement = $connect->prepare($query);
+        $statement->execute();
+        $result = $statement->fetchAll();
+        foreach ($result as $row) {
+            $output['firstName'] = $row['firstName'];
+            $output['lastName'] = $row['lastName'];
         }
-    }else{
-        $validationError = implode(", ", $error);
+    } elseif ($formData->action == 'Deletar'){
+        $query = "DELETE FROM names WHERE id = '" . $formData->id . "'";
+        $statement = $connect->prepare($query);
+        if($statement->execute()){
+            $message = "Registro Excluido";
+        }
+    } else {
+        if(empty($formData->firstName)){
+            $error[] = 'Necessario informar primeiro nome';
+        }else{
+            $firstName = $formData->firstName;
+        }
+        if(empty($formData->lastName)){
+            $error[] = 'Necessario informar ultimo nome';
+        }else{
+            $lastName = $formData->lastName;
+        }
+        
+        if(empty($error)){
+            if($formData->action == 'Inserir'){
+                $data = array(
+                    ':firstName'     => $firstName,
+                    ':lastName'      => $lastName
+                );
+                $query = "INSERT INTO names (firstName, lastName) VALUES (:firstName, :lastName)";
+                $statement = $connect->prepare($query);
+                if($statement->execute($data)){
+                    $message = 'Registro inserido';
+                }
+            }
+            if($formData->action == "Alterar"){
+                $data = array (
+                    ':firstName'     => $firstName,
+                    ':lastName'      => $lastName,
+                    ':id'            => $formData->id
+                );
+                $query = "UPDATE names SET firstName = :firstName, lastName = :lastName WHERE id = :id";
+                $statement = $connect->prepare($query);
+                if($statement->execute($data)){
+                    $message = 'Registro alterado';
+                }
+            }
+        }else{
+            $validationError = implode(", ", $error);
+        }
     }
-
     $output = [
         'error'     => $validationError,
         'message'   => $message
-    ];
-
+    ]; 
+    
     echo json_encode($output);
-
-?>
+    
+    ?>

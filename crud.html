@@ -7,14 +7,14 @@
     <meta name="author" content="Matheus Oliveira">
     <title>Crud - PHP & AngularJS</title>
     <!-- JS, Angular and JQuery files used to run the dataTable plugin -->
-    <script src="jquery-3.4.1.min.js"></script>
+    <script src="js/jquery-3.4.1.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-    <script src="jquery.dataTables.min.js"></script>
-    <script src="angular-datatables.min.js"></script>
-    <script src="bootstrap.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/angular-datatables.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <!-- Bootstrap and dataTable stylisheets -->
-    <link rel="stylesheet" href="bootstrap.min.css">
-    <link rel="stylesheet" href="dataTables.bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/dataTables.bootstrap.min.css">
   </head>
   <body ng-app="crudApp" ng-controller="crudController">
     <div class="row">
@@ -27,9 +27,8 @@
       <div class="col-md-6 offset-md-3">
         <div class="container" ng-init="fetchData()">
           <div class="alert alert-success alert-dismissible" ng-show="success" >
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">
-              {{successMessage}}
-            </a>
+            <a href="#" class="close" data-dismiss="alert" aria-label="close"></a>
+            {{successMessage}}
           </div>
           <div align="right">
             <button type="button" name="addButton" ng-click="addData()" class="btn btn-success">Adicionar</button>
@@ -40,12 +39,16 @@
                 <tr>
                   <th>Primeiro Nome</th>
                   <th>Ultimo Nome</th>
+                  <th>Editar</th>
+                  <th>Deletar</th>
                 </tr>
               </thead>
               <tbody>
                 <tr ng-repeat="name in namesData">
                   <td>{{name.firstName}}</td>
                   <td>{{name.lastName}}</td>
+                  <td><button type="button" ng-click="fetchSingleData(name.id)" class="btn btn-info btn-xs">Alterar</button></td>
+                  <td><button type="button" ng-click="deleteData(name.id)" class="btn btn-danger btn-xs">Deletar</button></td>
                 </tr>
               </tbody>
             </table>
@@ -61,14 +64,13 @@
     <div class="modal-content">
       <form method="post" ng-submit="submitForm()">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">{{modalTitle}}</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
         <div class="modal-body">
           <div class="alert alert-danger alert-dismissible" ng-show="error" >
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">
-              {{errorMessage}}
-            </a>
+            <a href="#" class="close" data-dismiss="alert" aria-label="close"></a>
+            {{errorMessage}}
           </div>
           <div class="form-group">
             <label for="firstName">Insira o primeiro nome</label>
@@ -114,10 +116,12 @@
     }
 
     $scope.addData = function(){
-      $scope.modalTitle = 'Add';
+      $scope.modalTitle = 'Adicionar Registro';
       $scope.submitButton = 'Inserir';
       $scope.openModal();
     }
+
+    $scope.formData = {};
 
     $scope.submitForm = function(){
       $http({
@@ -137,13 +141,47 @@
         }else{
           $scope.success = true;
           $scope.error = false;
-          $scope.successMassage = data.message;
+          $scope.successMessage = data.message;
           $scope.formData = {};
           $scope.closeModal();
           $scope.fetchData();
         }
       });
     }
+
+    $scope.fetchSingleData = function (id){
+      $http({
+        method:"POST",
+        url:"insert.php",
+        data:{
+          'id':id, 
+          'action':'fetchSingleData'
+        }
+      }).success(function(data){
+        $scope.firstName = data.firstName;
+        $scope.lastName = data.lastName;
+        $scope.hiddenId = id;
+        $scope.modalTitle = 'Alterar Registro';
+        $scope.submitButton = 'Alterar';
+        $scope.openModal();
+      });
+    }
+
+    $scope.deleteData = function(id){
+      if(confirm("Tem certeza que deseja deletar esse registro?")){
+        $http({
+          method:"POST",
+          url:"insert.php",
+          data:{'id':id, 'action':'Deletar'}
+        }).success(function(data){
+          $scope.success = true;
+          $scope.error = false;
+          $scope.successMessage = data.message;
+          $scope.fetchData();
+        });
+      }
+    }
+
   });
 
 </script>
