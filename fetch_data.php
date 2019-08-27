@@ -2,7 +2,7 @@
 
 include('database_connection.php');
 
-$query = "SELECT * FROM names ORDER BY id";
+$query = "SELECT * FROM roteiro ORDER BY id";
 
 $statement = $connect->prepare($query);
 
